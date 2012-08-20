@@ -6,7 +6,7 @@ Hangbot is an automated hangman player bot program for playing hangman over the 
 * **RandomBot** guesses letters at random
 * **SmartBot** uses an n-gram letter model 
 
-I tested RandomBot and SmartBot for 100 games. RandomBot had 0 wins and 100 losses, while SmartBot got 33 wins to 67 losses. That's pretty good! Let's tackle the usage instructions first and then I'll describe SmartBot's algorithm a bit more.
+I tested all three bots for 100 games. DefaultBot and RandomBot didn't even win once. Hangman is hard! Meanwhile, SmartBot achieved a record of 33 wins and 67 losses. That's pretty good! Let's tackle the usage instructions first and then I'll describe SmartBot's algorithm a bit more.
 
 #Installation and Usage
 
