@@ -5,6 +5,9 @@ var colors = require('colors');
 
 var api = require('./api');
 
+
+
+// module-local utility objects for handling statistics for each bot
 var stats;
 var statsFile = __dirname + '/stats.json'
 function readStats(){
@@ -32,8 +35,10 @@ bots.forEach(function(bot){
 });
 
 
-// the default bot picks a, b, c, d.... in order. All bots 
-// inherit from the default bot
+
+// DefaultBot: the default bot 
+// Strategy: picks a, b, c, d.... in order. 
+// All bots inherit from the default bot
 
 function Bot(){
 	this.guessedLetters = [];
@@ -98,7 +103,8 @@ Bot.prototype = {
 
 
 
-// random bot chooses a guess at random from the letters we have not yet picked
+// RandomBot
+// Strategy: picks an unchosen letter at random
 
 function RandomBot(){
 	this.guessedLetters = [];
@@ -119,13 +125,13 @@ _.extend(RandomBot.prototype, {
 
 
 
-// smartbot uses the linear interpolation of a unigram and a bigram character model
-// trained on an english corpus of about 5 million characters to predict the 
-// missing character with the maximum probability
+// SmartBot
+// Strategy: smartbot calculates the maximum likelihood letter from those not yet guessed 
+// at each remaining index using an n-gram letter model trained on an English corpus of about 5 million characters. 
+// It then chooses the global maximum likelihood letter from all indices as its guess
 //
-// prediction is argmax_l p(l|phrase) = argmax_i { argmax_l{ p(l_i|l_i-1) } for i = 0 to end of phrase}
-// where p(l_i | l_i-1) = w * p(l_i) + (1 - w)p(l_i | l_i-1) for 0 < w < 1
-
+// The likelihood model it uses is a linear interpolation of a bigram and a unigram model. See the readme
+// for details
 
 // first, calculate some summary statistics over the bigram and unigram frequencies that will 
 // be useful
@@ -190,14 +196,15 @@ _.extend(SmartBot.prototype,{
 		return pick.letter;
 	},
 	getProbs: function(prev){
-		//given the previous letter, return probability of each letter in the current spot
+		// given the previous letter, return the conditional probability of each letter choice 
+		// in the current spot
 		
 		// remove already guessed letters from consideration
 		var these_letters = ALL_LETTERS.filter(function(item){ 
 			return this.guessedLetters.indexOf(item) === -1;
 		}.bind(this));
 
-		// calculate likelihood for each possible letter
+		// calculate likelihood for each possible letter choice at this index
 		var probs = [];
 		these_letters.forEach(function(letter){
 			var biProb = 0;
@@ -243,10 +250,6 @@ exports.getStats = function(){
 }
 
 
-// if (require.main === module) {
-// 	var bot = new RandomBot();
-// 	bot.startGame();
-// }
 
 
 
