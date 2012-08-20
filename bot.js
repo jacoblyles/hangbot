@@ -1,37 +1,12 @@
 var fs = require('fs');
+
 var _ = require('underscore');
 var colors = require('colors');
 
 var api = require('./api');
 
-//fake api for development
-// var api = {
-// 	turn: 0,
-// 	startGame: function(cb){
-// 		this.turn = 0;
-// 		cb({ 
-// 			game_key: 'xDH2QScZLGNSn25ksg3aVNuqAY4fZAvo',
-//   			phrase: '______ ______ __ ___ _____',
-//   			state: 'alive',
-//   			num_tries_left: '5' 
-//   		});
-// 	}, guess: function(key, cb) { 
-// 		this.turn += 1;
-// 		var state = 'alive';
-// 		if (this.turn > 5) {
-// 			var state = Math.random() * 2 > 1 ? 'lost' : 'won';
-// 		} 
-// 		cb({ 
-// 			game_key: 'xDH2QScZLGNSn25ksg3aVNuqAY4fZAvo',
-//   			phrase: '_e__te ____e_ _f the ___l_',
-//   			state: state,
-//   			num_tries_left: '3' 
-//   		});
-// 	}
-// }
-
 var stats;
-var statsFile = './stats.json'
+var statsFile = __dirname + '/stats.json'
 function readStats(){
 	if (!fs.existsSync(statsFile)){
 		return {};
@@ -154,8 +129,8 @@ _.extend(RandomBot.prototype, {
 
 // first, calculate some summary statistics over the bigram and unigram frequencies that will 
 // be useful
-var bigrams = JSON.parse(fs.readFileSync('./data/bi.txt'));
-var	unigrams = JSON.parse(fs.readFileSync('./data/uni.txt'));
+var bigrams = JSON.parse(fs.readFileSync(__dirname + '/data/bi.txt'));
+var	unigrams = JSON.parse(fs.readFileSync(__dirname + '/data/uni.txt'));
 
 var ALL_LETTERS = [];
 for (var i = 97; i<=122; i++){
@@ -164,8 +139,8 @@ for (var i = 97; i<=122; i++){
 // how many letters are in the corpus. Needed to convert frequencies to probabilities
 var total_letters = _.reduce(unigrams, function(memo, val){return memo + val;}, 0);
 
-//bigrams can start with a beginning-of-word marker. 
-//Our unigram frequencies don't include them because we can't guess them! 
+//bigrams can start with a beginning-of-word marker "$". 
+//Our unigram frequencies don't include $ because we can't guess it! 
 var ALL_BIGRAMS = ['$'].concat(ALL_LETTERS); 
 
 
@@ -207,8 +182,7 @@ _.extend(SmartBot.prototype,{
 			}.bind(this));
 		}.bind(this));
 		
-		// pick maximum likelihood letter from any index
-		//console.log('maximum likelihood letters for each index', mll);
+		// pick global maximum likelihood letter from all remaining indices
 		var pick = _.max(mll, function(item){
 			return item.probability;
 		});
@@ -223,7 +197,7 @@ _.extend(SmartBot.prototype,{
 			return this.guessedLetters.indexOf(item) === -1;
 		}.bind(this));
 
-		// calculate probability for each letter
+		// calculate likelihood for each possible letter
 		var probs = [];
 		these_letters.forEach(function(letter){
 			var biProb = 0;
@@ -245,7 +219,6 @@ _.extend(SmartBot.prototype,{
 		this.phrase.split(' ').forEach(function(word){
 			this.words.push(['$'].concat(word.split('')));
 		}.bind(this));
-		//console.log(this.words);
 	},
 });
 
@@ -253,16 +226,6 @@ _.extend(SmartBot.prototype,{
 exports.DefaultBot = Bot;
 exports.RandomBot = RandomBot;
 exports.SmartBot = SmartBot;
-exports.run = function(name, cb){
-	if (bots.indexOf(name) === -1){
-		console.error('that bot does not exist', name);
-		console.error('select one of', JSON.stringify(bots));
-		return;
-	}
-	var bot = new exports[name];
-	bot.startGame(cb)
-}
-
 exports.getStats = function(){
 	_.each(stats, function(val,key){
 		var title = 'stats for ' + key
@@ -279,10 +242,11 @@ exports.getStats = function(){
 	return stats;
 }
 
-if (require.main === module) {
-	var bot = new RandomBot();
-	bot.startGame();
-}
+
+// if (require.main === module) {
+// 	var bot = new RandomBot();
+// 	bot.startGame();
+// }
 
 
 

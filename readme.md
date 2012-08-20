@@ -12,11 +12,11 @@ I tested RandomBot and SmartBot for 100 games. RandomBot had 0 wins and 100 loss
 
 To use Hangbot, first make sure you are using a machine with a recent copy of node.js and [npm](http://npmjs.org/). Then you can install this project with 
 
-    $ git clone 
+    $ git clone git://github.com/jacoblyles/hangbot.git
     $ cd hangbot
     $ npm install -g
 
-The "-g" flag installs an executable script that will be accessible from any working directory. Pretty nifty!
+The "-g" flag installs an executable script called `hangbot` that will be accessible from any working directory.
 
 The commands available for hangbot are:
 
@@ -45,7 +45,7 @@ The sub-models are given by:
     unigram(l_i) = count(l) / total_letters
     bigram(l_i) = p(l_i | l_i-1) = count(l_i-1, l_i) / count(l_i-1, *)
 
-As I mentioned, SmartBot is significantly better than RandomBot! 
+As I mentioned, SmartBot is significantly better than random! 
 
 
 contributors:

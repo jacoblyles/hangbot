@@ -6,6 +6,7 @@ var argv = require('optimist').argv;
 
 
 function printUsage(command){
+	console.log('possible commands:');
 	commands.forEach(function(item){
 		console.log("\n" + item.usage.bold.cyan);
 		console.log("description: ".bold.green + item.description);
@@ -17,7 +18,7 @@ var commands = [
 		name: "run",
 		usage: "hangbot run <name> <times>",
 		description: 'runs bot named default, random, or smart <times> number of times\n \
-		defaults are default bot 1 time if params not supplied',
+		defaults are "default" and 1 if parameters are not supplied by the user',
 		func: run
 	},
 	{
@@ -62,8 +63,8 @@ function run(name, times){
 
 if (require.main === module) {
 	console.log("***********".rainbow);
-	console.log("Hang Bot".cyan);
-	console.log("***********\n".rainbow);
+	console.log("HangBot".cyan);
+	console.log("***********".rainbow);
 
 	command = argv._[0] || "help";
 
