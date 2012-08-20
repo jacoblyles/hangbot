@@ -1,0 +1,31 @@
+{
+  "name": "hangbot",
+  "private": "true",
+  "version": "0.1.0",
+  "author": "jacoblyles <jacob.lyles@gmail.com>",
+  "description": "hanging bots, one at a time",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jacoblyles/hangbot.git"
+  },
+  "keywords": [
+    "hangman"
+  ],
+  "dependencies": {
+    "underscore": "1.3.*",
+    "request": "2.10.*",
+    "colors": "0.6.*",
+    "optimist": "0.3.*"
+  },
+  "bin": {
+    "hangbot": "./app.js"
+  },
+  "main": "./app.js",
+  "directories" :{
+    "data": "data"
+  },
+  "license": "DWTFYW",
+  "engine": {
+    "node": ">=0.8.*"
+  }
+}
