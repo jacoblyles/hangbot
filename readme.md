@@ -16,7 +16,9 @@ To use Hangbot, first make sure you are using a machine with a recent copy of no
     $ cd hangbot
     $ npm install -g
 
-The "-g" flag installs an executable script called `hangbot` that will be accessible from any working directory.
+The "-g" flag installs an executable script called `hangbot` that will be accessible from any working directory. After installation, take it for a spin! The following command tells SmartBot to play 5 games: 
+
+    hangbot run smart 5
 
 The commands available for hangbot are:
 
