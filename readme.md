@@ -5,8 +5,9 @@ Hangbot is an automated hangman player bot program for playing hangman over the 
 * **DefaultBot** guesses letters in alphabetical order. It's not too bright!
 * **RandomBot** guesses letters at random
 * **SmartBot** uses an n-gram letter model 
+* **SmarterBot** uses a unigram word model and a letter model.
 
-I tested all three bots for 100 games. DefaultBot and RandomBot didn't even win once. Hangman is hard! Meanwhile, SmartBot achieved a record of 33 wins and 67 losses. That's pretty good! Let's tackle the usage instructions first and then I'll describe SmartBot's algorithm a bit more.
+I tested all four bots for 100 games. DefaultBot and RandomBot didn't even win once. Hangman is hard for computers! Meanwhile, SmartBot achieved a record of 33 wins and 67 losses. That's pretty good! SmarterBot is the champion. He achieved a whopping record of 96 wins and 4 losses. That's better than me! Let's tackle the usage instructions first and then I'll describe SmartBot's algorithm a bit more.
 
 #Installation and Usage
 
@@ -18,7 +19,7 @@ To use Hangbot, first make sure you are using a machine with a recent copy of no
 
 The "-g" flag installs an executable script called `hangbot` that will be accessible from any working directory. After installation, take it for a spin! The following command tells SmartBot to play 5 games: 
 
-    hangbot run smart 5
+    hangbot run smarter 5
 
 The commands available for hangbot are:
 
@@ -29,7 +30,7 @@ prints out the usage instructions
 prints the win/loss stats of the bots available on your machine
 
     hangbot run <botname> <times>
-tell the bot to play hangman for you! Options for `<botname>` are 'default', 'random', and 'smart'. `<times>` should be an integer. Both parameters are optional, the defaults are 'default' and 1
+tell the bot to play hangman for you! Options for `<botname>` are 'default', 'random', 'smart', and 'smarter'. `<times>` should be an integer. Both parameters are optional, the defaults are 'default' and 1
 
 
 #SmartBot algorithm
@@ -49,6 +50,11 @@ The sub-models are given by:
 
 As I mentioned, SmartBot is significantly better than random! 
 
+#SmarterBot Algorithm
+
+SmartBot was the old hotness. SmarterBot blows it out of the water with a whopping 96% win record! 
+
+Using the same training corpus as before, SmarterBot first uses a unigram **word** model to determine the most likely word that is possible given the current state of the game. It then uses the same **letter** model as SmartBot to determine the maximum likelihood letter in that word that hasn't been guessed yet, and guesses that. 
 
 contributors:
 
