@@ -1,11 +1,13 @@
 ### Thanks to Peter Norvig for the jumbo public domain training corpus
 
-import re, collections, json
+import re, json
+from collections import defaultdict
+from functools import partial
 
 def words(text): 
 	return re.findall('[a-z]+', text.lower()) 
 
-def train(features):
+def train_letters(features):
 	unigram_model = {}
 	bigram_model = {}
 
@@ -26,18 +28,38 @@ def train(features):
 
 	return (unigram_model, bigram_model)
 
+def train_words(features):
+	words = defaultdict(partial(defaultdict, int))
+	for f in features:
+		words[len(f)][f] += 1
+	return words
+
+
 
 def main(infile, uni_outfile, bi_outfile):
-	models = train(words(file(infile).read()))
+	pass
+	# models = train_letters(words(file(infile).read()))
 	# print models[0]
 	# for k,v in models[1].items():
 	# 	if v > 2 and k[0] == "$":
 	# 		print k,v
-	print json.dumps(models[0]), uni_outfile
-	uni_out = open(uni_outfile, 'wb')
-	json.dump(models[0], uni_out)
-	bi_out = open(bi_outfile, 'wb')
-	json.dump(models[1], bi_out)
+	# print json.dumps(models[0]), uni_outfile
+	# uni_out = open(uni_outfile, 'wb')
+	# json.dump(models[0], uni_out)
+	# bi_out = open(bi_outfile, 'wb')
+	# json.dump(models[1], bi_out)
+
+def main_words(infile, outfile):
+	import operator
+	model = train_words(words(file(infile).read()))
+	length_list = {}
+	for k,v in model.items():
+		length_list[k] = [{"w": key, "c": model[k][key]} for key in sorted(model[k], key=model[k].get, reverse=True)]
+	print length_list[1]
+
+	out = open(outfile, 'wb')
+	json.dump(length_list, out)
 
 if __name__ == '__main__':
-	main('big.txt', 'uni.txt', 'bi.txt')
+	# main('big.txt', 'uni.txt', 'bi.txt')
+	main_words('big.txt', 'words.txt');

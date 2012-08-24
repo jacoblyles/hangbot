@@ -5,6 +5,31 @@ var colors = require('colors');
 
 var api = require('./api');
 
+//fake api for development
+// var api = {
+// 	turn: 0,
+// 	startGame: function(cb){
+// 		this.turn = 0;
+// 		cb({ 
+// 			game_key: 'xDH2QScZLGNSn25ksg3aVNuqAY4fZAvo',
+// 			phrase: '__e _e__te ____e_ _f the ___l_',
+// 			state: 'alive',
+// 			num_tries_left: '5' 
+// 		});
+// 	}, guess: function(key, cb) { 
+// 		this.turn += 1;
+// 		var state = 'alive';
+// 		if (this.turn > 5) {
+// 			var state = Math.random() * 2 > 1 ? 'lost' : 'won';
+// 		} 
+// 		cb({ 
+// 			game_key: 'xDH2QScZLGNSn25ksg3aVNuqAY4fZAvo',
+// 			phrase: '__e _e__te ____e_ _f the ___l_',
+// 			state: state,
+// 			num_tries_left: '3' 
+// 		});
+// 	}
+// }
 
 
 // module-local utility objects for handling statistics for each bot
@@ -24,7 +49,7 @@ function writeStats(){
 }
 
 stats = readStats();
-var bots = ['DefaultBot', 'RandomBot', 'SmartBot'];
+var bots = ['DefaultBot', 'RandomBot', 'SmartBot', 'SmarterBot'];
 bots.forEach(function(bot){
 	if (!stats[bot]){
 		stats[bot] = {
@@ -42,6 +67,7 @@ bots.forEach(function(bot){
 
 function Bot(){
 	this.guessedLetters = [];
+	this.failedLetters = [];
 	this.turn = 0;
 	this.num_tries_left = 5;
 };
@@ -70,6 +96,7 @@ Bot.prototype = {
 			console.log('wrong!'.red, data.num_tries_left, 'strikes left.\n'.red);
 			console.log('phrase is', data.phrase);
 			console.log('I\'ve guessed', this.guessedLetters);
+			this.failedLetters.push(this.guessedLetters[this.guessedLetters.length-1]);
 			this.num_tries_left = +data.num_tries_left; 
 		} else if(this.turn >1) {
 			console.log('I\'m right!'.cyan, data.num_tries_left, 'strikes left.\n'.cyan);
@@ -108,6 +135,7 @@ Bot.prototype = {
 
 function RandomBot(){
 	this.guessedLetters = [];
+	this.failedLetters = [];
 	this.turn = 0;
 	this.num_tries_left = 5;
 };
@@ -167,6 +195,7 @@ function SmartBot(){
 	this.num_tries_left = 5;
 	this.phrase = null;
 	this.words = [];
+	this.failedLetters = [];
 };
 SmartBot.prototype = new Bot();
 _.extend(SmartBot.prototype,{
@@ -181,7 +210,7 @@ _.extend(SmartBot.prototype,{
 		this.words.forEach(function(word){
 			word.forEach(function(letter, index){
 				if(letter === '_'){
-					mll.push(_.max(this.getProbs(word[index-1]), function(item){
+					mll.push(_.max(this.getLetterProbs(word[index-1]), function(item){
 						return item.probability;
 					}));
 				}
@@ -195,7 +224,7 @@ _.extend(SmartBot.prototype,{
 
 		return pick.letter;
 	},
-	getProbs: function(prev){
+	getLetterProbs: function(prev){
 		// given the previous letter, return the conditional probability of each letter choice 
 		// in the current spot
 		
@@ -230,9 +259,174 @@ _.extend(SmartBot.prototype,{
 });
 
 
+
+/// SmarterBot
+/// first finds the maximum likelihood word from a unigram word model
+/// excluding words which use letters which have already failed
+/// then finds the mll letter in that word from available letters
+
+var lengthList = JSON.parse(fs.readFileSync(__dirname + '/data/words.txt'));
+var totalWords = _.reduce(lengthList, function(total, list){
+	return total + list.reduce(function(memo, item){
+		return memo + item.c;
+	},0);
+}, 0);
+
+function SmarterBot(){
+	this.guessedLetters = [];
+	this.failedLetters = [];
+	this.turn = 0;
+	this.num_tries_left = 5;
+	this.phrase = null;
+	this.words = [];
+};
+
+// inherit from smartbot
+SmarterBot.prototype = new SmartBot();
+SmarterBot.parent = _.clone(SmarterBot.prototype);
+_.extend(SmarterBot.prototype,{
+	name: 'SmarterBot',
+	lambda: 0.5,
+	getBestGuess: function(data){
+		this.parseGameState(data);
+
+		var mlw = [];
+
+		this.words.forEach(function(word){
+			// for words not yet completely guessed, find the word with the highest 
+			// probability of occurence with the letters we still have
+			if (word.indexOf("_") === -1){
+				return;
+			}
+			var len = word.length - 1; // subtract off start token
+			mlw.push(this.getBestWord(word));
+
+		}.bind(this));
+
+		console.log('mlw', mlw);
+		// get rid of null guesses
+		mlw = mlw.filter(function(item){
+			return item.word;
+		});
+		console.log('mlw', mlw);
+
+		// no word guesses? default to letters
+		if(!mlw.length){
+			console.log('using letters');
+			// todo, figure out how to make super work
+			var mll = [];
+			this.words.forEach(function(word){
+				console.log(word);
+				word.forEach(function(letter, index){
+					if(letter === '_'){
+						mll.push(_.max(this.getLetterProbs(word[index-1]), function(item){
+							return item.probability;
+						}));
+					}
+				}.bind(this));
+			}.bind(this));
+			
+			// pick global maximum likelihood letter from all remaining indices
+			var pick = _.max(mll, function(item){
+				return item.probability;
+			});
+
+			return pick.letter;
+		}
+
+		var maxWord = _.max(mlw, function(item){ return item.prob });
+		console.log('I think I see', maxWord.word);
+		
+		var mll = [];
+		maxWord = ['$'].concat(maxWord.word.split(''));
+
+		maxWord.forEach(function(letter, index){
+			if (letter !== '$'){
+				mll.push({
+					letter: letter,
+					probability: this.getBigramProb(maxWord[index - 1], letter)
+				});
+			}
+		}.bind(this));
+
+		// console.log('mll, unfiltered', mll);
+		// console.log(this.guessedLetters);
+
+		mll = mll.filter(function(item){
+			return this.guessedLetters.indexOf(item.letter) === -1;
+		}.bind(this));
+
+		// console.log('mll, filtered', mll);
+
+		var pick = _.max(mll, function(item){
+			return item.probability;
+		});
+		return pick.letter;
+	},
+
+	getBigramProb: function(prev, curr){
+		var biProb = 0;
+		var uniProb = unigrams[curr] / total_letters;
+		var bigram = prev + curr;
+		var biProb = bigrams[bigram] / total_bigrams[prev];
+		return this.lambda * uniProb + (1 - this.lambda) * biProb;
+	},
+
+	getBestWord: function(toGuess){
+		var len = toGuess.length - 1;
+		toGuess = _.clone(toGuess).splice(1);
+
+		// gets the most likely word for the available letters
+		var list = lengthList[len];
+		var reject, wordPick, wordProb;
+		for (var i = 0; item = list[i]; i++){
+			var word = item.w.split('');
+			reject = false;
+
+			// reject if it uses letters that were wrong
+			this.failedLetters.forEach(function(letter){
+				if (word.indexOf(letter) !== -1){
+					reject = true;
+					return;
+				}
+			});
+
+			// reject if its correct letters don't align with current word
+			if (!reject){
+				word.forEach(function(letter, index){
+					if (this.guessedLetters.indexOf(letter) !== -1 && toGuess[index] !== word[index]){
+						reject = true;
+					}
+					if (toGuess[index] !== '_' && toGuess[index] !== word[index]){
+						reject = true;
+					}
+				}.bind(this));
+			}
+
+			if (!reject){
+				wordPick = item;
+				break;
+			}
+		}
+		if (!wordPick){
+			return {
+				word: null,
+				prob: 0
+			}	
+		}
+		wordProb = wordPick.c / totalWords;
+		return {
+			word: wordPick && wordPick.w,
+			prob: wordProb || 0
+		}
+	}
+});
+
+
 exports.DefaultBot = Bot;
 exports.RandomBot = RandomBot;
 exports.SmartBot = SmartBot;
+exports.SmarterBot = SmarterBot;
 exports.getStats = function(){
 	_.each(stats, function(val,key){
 		var title = 'stats for ' + key
@@ -249,6 +443,10 @@ exports.getStats = function(){
 	return stats;
 }
 
+if (require.main === module){
+	var bot = new SmarterBot();
+	bot.startGame();
+}
 
 
 

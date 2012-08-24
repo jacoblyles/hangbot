@@ -38,7 +38,8 @@ var commands = [
 var fullNames = {
 	"random": "RandomBot",
 	"default": "DefaultBot",
-	"smart": "SmartBot"
+	"smart": "SmartBot",
+	"smarter": "SmarterBot"
 };
 
 function run(name, times){
