@@ -1,7 +1,7 @@
 Hangbot
 ========
 
-Hangbot is an automated hangman player bot program for playing hangman over the web. It comes with three bots:
+Hangbot is an automated hangman player bot program for playing hangman over the web. It comes with four bots:
 * **DefaultBot** guesses letters in alphabetical order. It's not too bright!
 * **RandomBot** guesses letters at random
 * **SmartBot** uses an n-gram letter model 
